@@ -3,3 +3,9 @@ REPOSITORY          TAG                 IMAGE ID            CREATED             
 ubuntu              16.04               c6a43cd4801e        7 days ago          123MB
 nginx               latest              231d40e811cd        4 weeks ago         126MB
 hello-world         latest              fce289e99eb9        11 months ago       1.84kB
+
+>docker inspect <u_container_id>
+>docker inspect <u_image_id>
+На выводе следующих команд видно, что в выводе контейнера, есть информация об имени и ID контейнера, с какого образа он сделан,
+мета информация о самом контейнере, какие ограничения есть со стороны хостовой системы, какие volume подключенны, время создания,
+сетевые настройки, статус контейнера.
