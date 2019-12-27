@@ -40,3 +40,23 @@ docker tag reddit:latest <your-login>/otus-reddit:1.0
 ```shell script
 docker push <your-login>/otus-reddit:1.0
 ```
+
+## Docker и микросервисы
+Сборка образа(ов)
+```shell script
+docker build -t <your-dockerhub-login>/post:1.0 ./post-py
+docker build -t <your-dockerhub-login>/comment:1.0 ./comment
+docker build -t <your-dockerhub-login>/ui:1.0 ./ui
+```
+Создание отдельной сети для контейнеров
+```shell script
+docker network create reddit
+```
+Создание volume для постоянных данных
+```shell script
+docker volume create reddit_db
+```
+Запуск контейнера в ранее созданной сети, создание псевданима для контенера, и подключем volume 
+```shell script
+docker run -d --network=reddit --network-alias=post_db --network-alias=comment_db -v reddit_db:/data/db mongo:latest
+```
