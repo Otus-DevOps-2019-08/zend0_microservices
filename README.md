@@ -25,6 +25,10 @@ docker-machine ls
 ```shell script
 eval $(docker-machine env docker-host)
 ```
+Поодключение к машине по SSH
+```shell script
+docker-machine ssh docker-host
+```
 
 ## Docker Hub
 
@@ -59,4 +63,42 @@ docker volume create reddit_db
 Запуск контейнера в ранее созданной сети, создание псевданима для контенера, и подключем volume 
 ```shell script
 docker run -d --network=reddit --network-alias=post_db --network-alias=comment_db -v reddit_db:/data/db mongo:latest
+```
+## Docker и сети
+Docker при инициализации контейнера может подключить к нему только 1 сеть.  
+Дополнительные сети подключаются командой: 
+```shell script
+docker network connect <network> <container>
+```
+список сетей
+```shell script
+docker network ls
+```
+Вывод сгенерированных правил iptables
+```shell script
+sudo iptables -nL -t nat (флаг -v даст чуть больше инфы)
+```
+## docker-compose
+Запуск контейнеров
+```shell script
+docker-compose up
+```
+Остановка и удаление контейнеров
+```shell script
+docker-compose down
+```
+По-умолчанию, запущенный docker-compose будет всем контейнерам,volume и сетям добавлять префикс с названием дирректории 
+где лежит `docker-compose.yml`.  
+Если такое поведени не устраивает, то можно указать префикс самостоятельно (`-p, --project-name NAME`):
+```yaml
+docker-compose -p 'test' up
+```
+или добавить в `.env` `COMPOSE_PROJECT_NAME=<progect_name>`  
+
+Избавиться от префикса в именах контейнеров можно путем добавления `container_name: <name>` в описании сервиса
+```shell script
+  ui:
+    build: ./ui
+    image: ${USERNAME}/ui:${TAG}
+    container_name: ui
 ```
