@@ -102,3 +102,4 @@ docker-compose -p 'test' up
     image: ${USERNAME}/ui:${TAG}
     container_name: ui
 ```
+# GitLab CI
