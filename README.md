@@ -9,7 +9,7 @@ zend0 microservices repository
 ```shell script
 export GOOGLE_PROJECT=<идентификатор проекта>
 ```
-Создаём удаленных хост для управления им через docker-machine
+Создаём удаленный хост для управления им через docker-machine
 ```shell script
 $ docker-machine create --driver google \
 --google-machine-image https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/family/ubuntu-1604-lts \
@@ -23,11 +23,19 @@ docker-machine ls
 ```
 и заходим в неё для дальнейшей работы
 ```shell script
-eval $(docker-machine env docker-host)
+eval $(docker-machine env <docker-host>)
 ```
-Поодключение к машине по SSH
+Подключение к машине по SSH
 ```shell script
-docker-machine ssh docker-host
+docker-machine ssh <docker-host>
+```
+Посмотреть IP машины можно через
+```shell script
+docker-machine ip <docker-host>
+```
+Удаляем созданную машину
+```shell script
+docker-machine rm <docker-host>
 ```
 
 ## Docker Hub
@@ -115,3 +123,31 @@ gitlab/gitlab-runner:latest
 ```shell script
 docker exec -it gitlab-runner gitlab-runner register --run-untagged --locked=false
 ```
+# Prometheus
+## Формат метрик
+```shell script
+prometheus_build_info{branch="HEAD",goversion="go1.13.5",instance="localhost:9090",job="prometheus",revision="d9613e5c466c6e9de548c4dae1b9aabf9aaf7c57",version="2.15.2"}
+```
+* **prometheus_build_info**: название метрики - идентификатор собранной информации
+* **branch**, **goversion**, и т.д.: лейбл - добавляет метаданных метрике, уточняет ее. 
+Использование лейблов дает нам возможность неограничиваться лишь одним названием метрик для идентификации получаемой 
+информации. Лейблы содержаться в {} скобках и представлены наборами "ключ=значение".
+* значение метрики - численное значение метрики, либо `NaN`, если значение не доступно.
+
+Описание сервисов для мониторнга описываем в файле `prometheus.yml`
+```yaml
+...
+scrape_configs:
+...
+  - job_name: 'prometheus'
+    static_configs:
+      - targets:
+          - 'localhost:9090'
+
+  - job_name: 'ui'
+    static_configs:
+      - targets:
+          - 'ui:9292'
+...
+```
+docker hub [с готовыми образами](https://hub.docker.com/u/bbilder)
