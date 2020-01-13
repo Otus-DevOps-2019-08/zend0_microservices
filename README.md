@@ -102,3 +102,16 @@ docker-compose -p 'test' up
     image: ${USERNAME}/ui:${TAG}
     container_name: ui
 ```
+# GitLab CI
+## GitLab runner
+Запуск раннера в контейнере
+```shell script
+docker run -d --name gitlab-runner --restart always \
+-v /srv/gitlab-runner/config:/etc/gitlab-runner \
+-v /var/run/docker.sock:/var/run/docker.sock \
+gitlab/gitlab-runner:latest
+```
+Регистрация раннера
+```shell script
+docker exec -it gitlab-runner gitlab-runner register --run-untagged --locked=false
+```
