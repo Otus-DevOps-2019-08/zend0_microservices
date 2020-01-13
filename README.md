@@ -25,6 +25,10 @@ docker-machine ls
 ```shell script
 eval $(docker-machine env <docker-host>)
 ```
+Переключение на локальный докер
+```shell script
+eval $(docker-machine env --unset)
+```
 Подключение к машине по SSH
 ```shell script
 docker-machine ssh <docker-host>
@@ -123,8 +127,9 @@ gitlab/gitlab-runner:latest
 ```shell script
 docker exec -it gitlab-runner gitlab-runner register --run-untagged --locked=false
 ```
-# Prometheus
-## Формат метрик
+# Мониторинг
+## Prometheus
+### Формат метрик
 ```shell script
 prometheus_build_info{branch="HEAD",goversion="go1.13.5",instance="localhost:9090",job="prometheus",revision="d9613e5c466c6e9de548c4dae1b9aabf9aaf7c57",version="2.15.2"}
 ```
@@ -134,6 +139,7 @@ prometheus_build_info{branch="HEAD",goversion="go1.13.5",instance="localhost:909
 информации. Лейблы содержаться в {} скобках и представлены наборами "ключ=значение".
 * значение метрики - численное значение метрики, либо `NaN`, если значение не доступно.
 
+### Настройка целей для мониторинга
 Описание сервисов для мониторнга описываем в файле `prometheus.yml`
 ```yaml
 ...
@@ -150,4 +156,24 @@ scrape_configs:
           - 'ui:9292'
 ...
 ```
+### Настройка алертов
+Описание алертов в файле `alerts.yml`
+```yaml
+groups:
+  - name: alert.rules
+    rules:
+      - alert: InstanceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: page
+        annotations:
+          description: '{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 1 minute'
+          summary: 'Instance {{ $labels.instance }} down'
+```
+за сами алерты отвечает доп. сервис - [Alertmanager](https://prometheus.io/docs/alerting/alertmanager/)
+
 docker hub [с готовыми образами](https://hub.docker.com/u/bbilder)
+
+## Мониторинг Docker контейнеров
+Рассмотрен вариант сбора метрик с помощью cAdvisor.
