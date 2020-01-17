@@ -184,6 +184,28 @@ docker hub [с готовыми образами](https://hub.docker.com/u/bbild
 работать как со структурированными логами (подготовленные сообщение в JSON формате) так и 
 неструктурированными (plain-text и тут regexp и grok наше все).
 
-## Распледеленный трейсинг
+## Распределенный трейсинг
 Zipkin - один из таких инструментов, добавляет метки в сообщения сервисов и позволяет отслеживать куда и как долго
 шли запросы от сервиса к сервису.
+
+# Kubernetes
+
+## Kubernetes The Hard Way
+
+[Установка Kubernetes](https://github.com/kelseyhightower/kubernetes-the-hard-way) от инженерома Google Kelsey Hightower
+
+_В ходе выполнения данной работы, на триальном периоде (300$) GCP не давал запустить 6 VM, только 4 и всё, смена региона не помогает_
+
+Список установленных компонентов
+```shell script
+kubectl get componentstatuses --kubeconfig <kubeconfig>
+```
+Попадаем в под
+```shell script
+kubectl exec -ti $POD_NAME -- nslookup kubernetes
+kubectl exec -ti $POD_NAME -- nginx -v
+```
+Лог пода
+```shell script
+kubectl logs $POD_NAME
+```
