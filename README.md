@@ -209,3 +209,135 @@ kubectl exec -ti $POD_NAME -- nginx -v
 ```shell script
 kubectl logs $POD_NAME
 ```
+
+## Minikube
+
+Запускаем кластер
+```yaml
+minikube start
+```
+## Kubectl
+
+### Описание конфига
+Файл `~/.kube/config` - это такой же манифест kubernetes в YAML-формате (есть и Kind, и ApiVersion).
+```yaml
+apiVersion: v1
+clusters: # Список кластеров
+- cluster:
+    certificate-authority: /home/sema/.minikube/ca.crt
+    server: https://192.168.39.42:8443
+  name: minikube
+contexts: # Список контекстов
+- context:
+    cluster: minikube
+    user: minikube
+  name: minikube
+current-context: minikube
+kind: Config
+preferences: {}
+users: # Список пользователей
+- name: minikube
+  user:
+    client-certificate: /home/sema/.minikube/client.crt
+    client-key: /home/sema/.minikube/client.key
+``` 
+
+Кластер (cluster) - это:
+1. **server** - адрес kubernetes API-сервера 
+2. **certificate-authority** - корневой сертификат (которым подписан SSL-сертификат самого сервера), что бы убедиться, что 
+нас не обманывают и перед нами тот самый сервер  
+\+ **name** (Имя) для идентификации в конфиге.
+
+Пользователь (**user**) - это:
+1. Данные для аутентификации (зависит от того, как настроен сервер). Это могут 
+быть: 
+* username + password (Basic Auth)
+* client key + client certificate
+* token
+* auth-provider config (напримерGCP)  
+\+ **name** (Имя) дляидентификациивконфиге
+
+Контекст (**контекст**) - это:
+1. **cluster** - имя кластера из списка clusters
+2. **user** - имя пользователя из списка users
+3. **namespace** - область видимости по-умолчанию (необязательно)
+\+ **name** (Имя) для идентификации в конфиге
+
+### Пример конфигурирования kubectl
+Обычно порядок конфигурирования kubectl следующий:
+1. Создать cluster:
+    ```shell script
+    kubectl config set-cluster ... cluster_name
+    ```
+2. Создать данные пользователя (credentials)
+    ```shell script
+    kubectl config set-credentials ... user_name
+    ```
+3. Создать контекст
+    ```
+    kubectl config set-context context_name \
+    --cluster=cluster_name \
+    --user=user_name
+    ```
+4. Использовать контекст
+    ```shell script
+    kubectl config use-context context_name
+    ```
+
+Список всех контекстов можно увидеть так
+```shell script
+kubectl config get-contexts
+```
+
+`kubectl apply -f <filename>` может принимать не только отдельный файл, 
+но и папку с ними. Например:
+```shell script
+kubectl apply -f ./kubernetes/reddit
+```
+
+kubectl умеет пробрасывать сетевые порты POD-ов на локальную машину.  
+Найдем, используя selector, POD-ы приложения:
+```shell script
+kubectl get pods --selector component=ui
+```
+```shell script
+kubectl port-forward <pod-name> 8080:9292 # local-port : pod-port
+```
+
+### Services
+По label-ам найти соответствующие POD-ы. Посмотреть можно с помощью:
+```shell script
+kubectl describe service comment | grep Endpoints
+```
+изнутри любого POD-а разрешаем имя сервиса:
+```shell script
+kubectl exec -ti <pod-name> nslookup comment
+```
+Удалеие сервиса
+```shell script
+kubectl delete -f mongodb-service.yml
+# или
+kubectl delete service mongodb
+```
+По-умолчанию все сервисы имеют тип **ClusterIP** - это значит, что сервис распологается 
+на внутреннем диапазоне IP-адресов кластера. Снаружи до него нет доступа.
+
+Тип **NodePort** - на каждой ноде кластера открывает порт из диапазона **30000-32767** и 
+переправляет трафик с этого порта на тот, который указан в **targetPort** Pod (похоже на стандартный expose в docker)
+
+#### Services и minikube
+Minikube может выдавать web-странцы с сервисами которые были помечены типом NodePort
+```shell script
+minikube service ui
+```
+Minikube может перенаправлять на web-странцы с сервисами которые были помечены типом 
+NodePort
+```shell script
+minikube service list
+```
+Minikube также имеет в комплекте несколько стандартных аддонов, получить список можно так
+```shell script
+minikube addons list
+```
+
+

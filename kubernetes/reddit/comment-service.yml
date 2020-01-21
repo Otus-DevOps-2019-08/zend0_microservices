@@ -1,0 +1,19 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  # В DNS появится запись для comment
+  name: comment
+  labels:
+    app: reddit
+    component: comment
+spec:
+  # При обращении на адрес post:9292 изнутри любого из POD-ов текущего namespace
+  # нас переправит на 9292-ный порт одного из POD-ов приложения post, выбранных по label-ам
+  ports:
+    - port: 9292
+      protocol: TCP
+      targetPort: 9292
+  selector:
+    app: reddit
+    component: comment
