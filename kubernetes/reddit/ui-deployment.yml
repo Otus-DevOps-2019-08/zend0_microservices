@@ -25,3 +25,9 @@ spec: # Блок спецификации деплоя
       containers:
         - image: bbilder/ui
           name: ui
+          env:
+            - name: ENV
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+

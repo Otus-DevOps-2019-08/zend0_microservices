@@ -305,6 +305,7 @@ kubectl port-forward <pod-name> 8080:9292 # local-port : pod-port
 ```
 
 ### Services
+
 По label-ам найти соответствующие POD-ы. Посмотреть можно с помощью:
 ```shell script
 kubectl describe service comment | grep Endpoints
@@ -326,6 +327,7 @@ kubectl delete service mongodb
 переправляет трафик с этого порта на тот, который указан в **targetPort** Pod (похоже на стандартный expose в docker)
 
 #### Services и minikube
+
 Minikube может выдавать web-странцы с сервисами которые были помечены типом NodePort
 ```shell script
 minikube service ui
@@ -338,6 +340,10 @@ minikube service list
 Minikube также имеет в комплекте несколько стандартных аддонов, получить список можно так
 ```shell script
 minikube addons list
+```
+Открываем работающий Dashboard
+```shell script
+minikube dashboard
 ```
 
 
