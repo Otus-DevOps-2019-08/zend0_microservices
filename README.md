@@ -244,13 +244,11 @@ users: # Список пользователей
 
 Кластер (cluster) - это:
 1. **server** - адрес kubernetes API-сервера 
-2. **certificate-authority** - корневой сертификат (которым подписан SSL-сертификат самого сервера), что бы убедиться, что 
-нас не обманывают и перед нами тот самый сервер  
+2. **certificate-authority** - корневой сертификат (которым подписан SSL-сертификат самого сервера), что бы убедиться, что нас не обманывают и перед нами тот самый сервер  
 \+ **name** (Имя) для идентификации в конфиге.
 
 Пользователь (**user**) - это:
-1. Данные для аутентификации (зависит от того, как настроен сервер). Это могут 
-быть: 
+1. Данные для аутентификации (зависит от того, как настроен сервер). Это могут быть: 
 * username + password (Basic Auth)
 * client key + client certificate
 * token
@@ -346,4 +344,64 @@ minikube addons list
 minikube dashboard
 ```
 
+## Ingress
 
+подготовим сертификат используя IP как CN
+
+```shell script
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN= 35.190.66.90"
+```
+загрузим сертификат в кластер kubernetes
+
+```shell script
+kubectl create secret tls ui-ingress --key tls.key --cert tls.crt -n dev
+```
+
+## Network Policy
+
+Определяем имя кластера
+
+```shell script
+gcloud beta container clusters  list
+```
+
+Включим network-policy для GKE.
+
+```shell script
+gcloud beta container clusters update <cluster-name> --zone=us-central1-a --update-addons=NetworkPolicy=ENABLED
+gcloud beta container clusters update <cluster-name> --zone=us-central1-a  --enable-network-policy
+```
+
+## Volume
+
+Вместо того, чтобы хранить данные локально на ноде, имеет смысл подключить удаленное хранилище. В нашем случае можем использовать Volume gcePersistentDisk, который будет складывать данные в хранилище GCE.  
+
+Создаём диск
+```shell script
+gcloud compute disks create --size=25GB --zone=europe-west1-c reddit-mongo-disk
+```
+
+## PersistentVolume
+
+Используемый механизм Volume-ов можно сделать удобнее. Мы можем использовать не целый выделенный диск для каждого пода, а целый ресурс хранилища, общий для всего кластера.  
+Тогда при запуске Stateful-задач в кластере, мы сможем запросить хранилище в виде такого же ресурса, как CPU или оперативная память.
+
+### PersistentVolumeClaim
+
+Мы ранее создали ресурс дискового хранилища, распространенный на весь кластер, в виде PersistentVolume.  
+Чтобы выделить приложению часть такого ресурса - нужно создать запрос на выдачу - PersistentVolumeClaim. 
+Claim - это именно запрос, а не само хранилище.  
+С помощью запроса можно выделить место как из конкретного PersistentVolume (тогда параметры accessModes и StorageClass должны соответствовать, а места должно хватать), так и просто создать отдельный PersistentVolume под конкретный запрос.
+
+## Динамическое выделение Volume'ов
+
+Создав PersistentVolume мы отделили объект "хранилища" от наших Service'ов и Pod'ов. Теперь мы можем его при необходимости переиспользовать.  
+Но нам гораздо интереснее создавать хранилища при необходимости и в автоматическом режиме. В этом нам помогут StorageClass’ы. Они описывают где (какой провайдер) и какие хранилища создаются.
+
+### StorageClass
+
+Вывод какие получились PersistentVolume'ы
+
+```shell script
+kubectl get persistentvolume -n dev
+```
